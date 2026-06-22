@@ -354,16 +354,30 @@ Ubuntu can read and write to your phone's storage:
 
 ## 💡 Usage
 
+### From your PC (same WiFi network)
 ```bash
-# Connect to Ubuntu on your phone
 ssh -t -p 8023 ubuntu@YOUR_PHONE_IP
-
-# Interactive mode
 claude
+```
 
-# Non-interactive (great for automation)
+### From Termux on the phone itself (no network needed)
+The best part — you can use Claude Code directly from the phone without any PC:
+
+```bash
+# Open Termux on your phone, then:
+ssh -t -p 8023 ubuntu@localhost
+
+# Inside Ubuntu:
+claude
+```
+
+That's it. No IP address, no WiFi, no cable — Termux → Ubuntu → Claude Code, all on the same device.
+
+### Non-interactive mode (automation)
+```bash
 claude -p "Check my server logs and summarize any errors"
 claude -p "List all files in /sdcard/Download over 100MB"
+claude -p "Analyze storage and tell me what is safe to delete"
 ```
 
 ---

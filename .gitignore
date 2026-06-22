@@ -1,0 +1,15 @@
+# Never commit credentials
+*.env
+.env.*
+credentials.*
+*password*
+*secret*
+*api_key*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Personal memory files (use templates instead)
+memory/*.md
+!memory/MEMORY.md

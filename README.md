@@ -221,10 +221,16 @@ apt install -y openssh-server
 
 # Configure port 8023
 echo "Port 8023" >> /etc/ssh/sshd_config
+
+# ⚠️ Password auth enabled below for initial setup ONLY
+# See Security section to switch to SSH keys and disable this
 sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+# ⚠️ Root login enabled for initial setup ONLY — disable after first login
+# See Security section: "Disable root SSH login"
 sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 
-# Create user
+# Create a non-root user (recommended for daily use)
 useradd -m -s /bin/bash myuser
 echo "myuser:yourpassword" | chpasswd
 usermod -aG sudo myuser
@@ -239,6 +245,8 @@ mkdir -p /run/sshd
 echo "Ubuntu SSH ready on port 8023"
 EOF
 ```
+
+> 🔐 **After first login:** immediately go to the [Security section](#-security--making-it-safer) and switch to SSH keys + disable password/root login. The defaults above are for getting started only.
 
 ### Step 8 — Auto-start Ubuntu with Termux
 
@@ -603,12 +611,25 @@ export ANTHROPIC_API_KEY="not-needed"
 EOF
 ```
 
-### ⚠️ Limitations
+### ⚠️ Honest Limitations — Read Before Using DeepSeek
 
-- Claude Code is optimized for Claude — some advanced agentic features may differ
-- DeepSeek servers are based in China — avoid for sensitive/private data
-- Response style differs (DeepSeek R1 shows reasoning steps)
-- Free credits are limited — monitor your usage at platform.deepseek.com
+| Feature | With Claude (Anthropic) | With DeepSeek via LiteLLM |
+|---------|------------------------|--------------------------|
+| Basic Q&A / chat | ✅ Full | ✅ Works well |
+| File reading | ✅ Full | ✅ Works |
+| Code generation | ✅ Full | ✅ Works well |
+| **Agentic tool use** | ✅ Full | ⚠️ Partial — may break |
+| **File editing (Edit tool)** | ✅ Full | ⚠️ Inconsistent |
+| **Multi-step tasks** | ✅ Full | ⚠️ Less reliable |
+| **claude -p non-interactive** | ✅ Full | ✅ Works |
+
+**Bottom line:** DeepSeek via LiteLLM works great for simple prompts and code generation. For Claude Code's full agentic capabilities (autonomous file editing, multi-step reasoning chains, tool use), stick with the official Anthropic API.
+
+**Other limitations:**
+- DeepSeek servers are based in China — avoid for sensitive or private data
+- DeepSeek R1 shows its reasoning steps (verbose output — can be noisy)
+- Free credits (~$5) run out faster than you'd expect with agentic tasks
+- LiteLLM adds latency (~200-500ms extra per request)
 
 ### 💡 Pro tip: Switch between providers
 

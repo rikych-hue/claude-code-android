@@ -76,17 +76,27 @@ claude  # ← Claude Code running on your phone!
 **Download Termux from F-Droid:**  
 👉 https://f-droid.org/en/packages/com.termux/
 
-The F-Droid version is actively maintained and always up to date.
+> **Google Play Protect warning:** When installing from F-Droid, Android may show "unverified app" — this is normal and expected. F-Droid is a trusted open-source app store. Tap "Install anyway."
 
 ---
 
 ## 📋 Requirements
 
-- Android 10 or higher
-- At least 4 GB RAM (8 GB+ recommended)
-- At least 4 GB free storage
-- Termux installed **from F-Droid** (NOT Play Store)
-- A Claude subscription or Anthropic API key (**paid** — see [pricing](https://www.anthropic.com/pricing))
+- **Android version:** 10 or higher (Android 9 may work but is untested)
+- **RAM:** At least 4 GB (8 GB+ recommended for Claude Code)
+- **Storage:** At least 4 GB free
+- **Termux:** Installed from F-Droid (NOT Play Store)
+- **AI API:** Claude subscription or Anthropic API key (**paid** — see [pricing](https://www.anthropic.com/pricing))
+- **Kept plugged in** recommended for 24/7 use — see [Battery & Thermals](#-battery--thermals)
+
+### Manufacturer notes
+| Brand | Status | Notes |
+|-------|--------|-------|
+| Samsung (One UI) | ✅ Tested | ADB commands work and persist |
+| Google Pixel | ✅ Should work | Play Protect warning on F-Droid — ignore it |
+| Xiaomi (MIUI) | ⚠️ Partial | ADB anti-suspension resets on reboot — rerun `adb-setup.bat` after each restart |
+| OnePlus | 🟡 Untested | Should work — report your results! |
+| Other brands | 🟡 Untested | Android 10+ should work in theory |
 
 ---
 
@@ -250,7 +260,7 @@ EOF
 
 ### Step 8 — Auto-start Ubuntu with Termux
 
-Update `~/.bashrc` in Termux to auto-start Ubuntu:
+**8a. Configure `.bashrc`** — auto-starts everything when you open Termux:
 
 ```bash
 cat > ~/.bashrc << 'EOF'
@@ -269,6 +279,33 @@ echo "Termux SSH  :8022 ready"
 echo "Ubuntu SSH  :8023 ready"
 EOF
 ```
+
+**8b. Auto-start on phone boot (optional but recommended)**
+
+Without this, you need to open Termux manually after every phone restart.
+
+1. Install **Termux:Boot** from F-Droid:  
+   👉 https://f-droid.org/en/packages/com.termux.boot/
+
+2. Open the Termux:Boot app once (just to activate it)
+
+3. Create the boot script:
+```bash
+mkdir -p ~/.termux/boot
+cat > ~/.termux/boot/start-services.sh << 'EOF'
+#!/data/data/com.termux/files/usr/bin/bash
+termux-wake-lock
+sshd
+proot-distro login ubuntu \
+  --bind /data/data/com.termux/files/home:/mnt/termux \
+  -- bash -c "mkdir -p /run/sshd && /usr/sbin/sshd" &
+EOF
+chmod +x ~/.termux/boot/start-services.sh
+```
+
+After a phone restart, everything starts automatically — no need to open Termux manually.
+
+> **Without Termux:Boot:** just open Termux once after each restart — `.bashrc` handles the rest.
 
 ### Step 9 — Authenticate Claude Code
 
@@ -319,6 +356,7 @@ claude -p "List all files in /sdcard/Download over 100MB"
 
 **Termux SSH not working after phone restart**
 → Open Termux once manually — `.bashrc` auto-starts everything
+→ For fully automatic restart: install Termux:Boot (see Step 8b)
 
 **Claude Code won't accept keyboard input**
 → Always connect with `ssh -t` flag (forces TTY allocation)
@@ -331,6 +369,73 @@ claude -p "List all files in /sdcard/Download over 100MB"
 
 **Ubuntu SSH stops responding**
 → Ubuntu runs inside Termux — if Termux was closed, open it once to restart everything
+
+**Phone IP changes every time (DHCP)**
+→ Assign a static IP on your router: find your phone's MAC address and reserve an IP
+→ Or use **Tailscale** (free) — gives your phone a permanent IP that never changes, works anywhere
+→ Quick fix: run `ip addr show wlan0` inside Termux to find the current IP
+
+**Need to change SSH port (conflict with another service)**
+```bash
+# In Ubuntu:
+sed -i 's/Port 8023/Port YOUR_NEW_PORT/' /etc/ssh/sshd_config
+killall sshd && mkdir -p /run/sshd && /usr/sbin/sshd
+```
+
+**MIUI (Xiaomi) — ADB settings reset after reboot**
+→ MIUI resets some ADB settings on restart — rerun `adb-setup.bat` after each reboot
+→ Alternative: enable "Developer options → Keep ADB authorization" if available on your MIUI version
+
+---
+
+## 🔋 Battery & Thermals
+
+**Running 24/7 — battery advice:**
+- ✅ Keep the phone **plugged in** permanently — this is the intended use case
+- ✅ Charge to ~80% and keep it there if possible (some Samsung models support charge limiting)
+- ⚠️ Avoid wireless charging for permanent setups — generates more heat
+- ⚠️ Don't keep the phone in a case 24/7 — it needs airflow
+
+**Phone getting hot (thermal throttling):**
+- The phone will throttle CPU after sustained load — Claude Code responses may slow down
+- Normal operating temp: 35-42°C under load
+- If hitting 45°C+: let it rest, remove case, or point a small fan at it
+- Claude Code is mostly I/O bound (waiting for API) — CPU load is actually low most of the time
+
+**Expected battery impact:**
+- SSH server idle: minimal (~2-3% extra drain/hour)
+- Active Claude Code session: moderate (~5-8% extra drain/hour)
+- Plugged in 24/7: negligible — the charger handles it
+
+---
+
+## 🦙 Alternative: Run a Local AI (No API Cost)
+
+If you want zero ongoing AI cost, you can run **Ollama** locally on the phone — no internet required, no API fees.
+
+> ⚠️ This replaces Claude Code with a different tool. Local models on phone-class hardware are slower and less capable than Claude.
+
+```bash
+# In Ubuntu — download Ollama ARM64
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Pull a small model (fits in 4GB RAM)
+ollama pull llama3.2:3b   # ~2GB, runs on 4GB RAM phones
+ollama pull phi3:mini     # ~2.3GB, very capable for its size
+
+# Run
+ollama run llama3.2:3b
+```
+
+Best models for phone RAM limits:
+| Model | Size | Min RAM | Quality |
+|-------|------|---------|---------|
+| llama3.2:3b | 2 GB | 4 GB | Good for simple tasks |
+| phi3:mini | 2.3 GB | 4 GB | Strong coding |
+| mistral:7b | 4 GB | 8 GB | Very capable |
+| llama3.1:8b | 5 GB | 10 GB | Near GPT-3.5 quality |
+
+> Ollama doesn't integrate with Claude Code — you'd use it directly via terminal or its API.
 
 ---
 

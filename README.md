@@ -280,15 +280,35 @@ echo "Ubuntu SSH  :8023 ready"
 EOF
 ```
 
-**8b. Auto-start on phone boot (optional but recommended)**
+**8b. After phone reboot — what to do**
 
-Without this, you need to open Termux manually after every phone restart.
+> ✅ **Good news: Termux:Boot is NOT required for normal use.**
 
-1. Install **Termux:Boot** from F-Droid:  
-   👉 https://f-droid.org/en/packages/com.termux.boot/
+After a phone restart, just **open Termux once** — the `.bashrc` launches everything automatically in seconds:
 
-2. Open the Termux:Boot app once (just to activate it)
+```
+Phone restarts
+    ↓
+Open Termux (tap the icon)
+    ↓
+.bashrc runs automatically:
+  → termux-wake-lock  (keeps Termux alive)
+  → sshd              (Termux SSH :8022)
+  → Ubuntu sshd       (Ubuntu SSH :8023)
+    ↓
+Minimize or close Termux
+    ↓
+Both SSH servers stay alive in background ✅
+```
 
+You don't need to type any commands — just open and minimize.
+
+**Optional: Termux:Boot (fully automatic, no manual open needed)**
+
+If you want zero interaction after reboot (phone restarts and SSH comes up on its own):
+
+1. Install **Termux:Boot** from F-Droid: https://f-droid.org/en/packages/com.termux.boot/
+2. Open it once to activate
 3. Create the boot script:
 ```bash
 mkdir -p ~/.termux/boot
@@ -302,10 +322,6 @@ proot-distro login ubuntu \
 EOF
 chmod +x ~/.termux/boot/start-services.sh
 ```
-
-After a phone restart, everything starts automatically — no need to open Termux manually.
-
-> **Without Termux:Boot:** just open Termux once after each restart — `.bashrc` handles the rest.
 
 ### Step 9 — Authenticate Claude Code
 
@@ -355,8 +371,9 @@ claude -p "List all files in /sdcard/Download over 100MB"
 ## 🔧 Troubleshooting
 
 **Termux SSH not working after phone restart**
-→ Open Termux once manually — `.bashrc` auto-starts everything
-→ For fully automatic restart: install Termux:Boot (see Step 8b)
+→ Open Termux once — `.bashrc` auto-starts everything (sshd + Ubuntu) in seconds
+→ You don't need to type anything — just open and minimize
+→ For fully hands-free auto-start: install Termux:Boot (optional, see Step 8b)
 
 **Claude Code won't accept keyboard input**
 → Always connect with `ssh -t` flag (forces TTY allocation)

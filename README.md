@@ -1,5 +1,9 @@
 # 📱 Claude Code on Android — ARM64 AI Agent Server (No VPS Needed)
 
+<p align="center">
+  <img src="assets/banner.jpg" alt="Claude Code on Android — No VPS Needed" width="400"/>
+</p>
+
 > **"I turned my old Samsung into a Claude Code server that beats a $10 VPS — here's how"**
 
 Run Claude Code on your Android phone as a 24/7 autonomous AI agent. No VPS, no hosting cost — just your phone running Ubuntu on ARM64.
